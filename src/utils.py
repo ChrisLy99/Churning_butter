@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from re import finditer
 
 def convert(df):
+    """Turns original binary values to 0/1"""
     replace = {'No': 0, 'Yes': 1}
     replace2 = {'Male': 0, 'Female': 1}
     bool_col = ['SeniorCitizen', 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling', 'Churn']
@@ -13,6 +15,7 @@ def convert(df):
     return df
 
 def revert(df):
+    """Turns 0/1 to original binary values"""
     replace = {0: 'No', 1: 'Yes'}
     replace2 = {0: 'Male', 1: 'Female'}
     bool_col = ['SeniorCitizen', 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling', 'Churn']
@@ -22,6 +25,7 @@ def revert(df):
     return df
 
 def plot_cat(df, nrows=8, ncols=2):
+    """Return a plotgrid of all categorical columns"""
     ncount = len(df)
     cat_cols = df.select_dtypes(exclude=np.number).columns.drop('Churn')
     fig, axes = plt.subplots(nrows, ncols, constrained_layout=True, figsize=(12,24))
@@ -41,8 +45,20 @@ def plot_cat(df, nrows=8, ncols=2):
                         ha='left', va='center') # set the alignment of the text
     return fig
 
-def plot_num(df, nrows=3, ncols=1):
-    fig, axes = plt.subplots(nrows, ncols)
+def camel_case_split(identifier):
+    """ref -> https://stackoverflow.com/questions/29916065/how-to-do-camelcase-split-in-python"""
+    matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+    return [m.group(0) for m in matches]
+
+def clean_str(s):
+    return ' '.join(camel_case_split(s)).capitalize()
+
+def plot_num(df, nrows=2, ncols=2):
+    """Return a plotgrid of all numerical columns"""
     num_cols = df.select_dtypes(include=np.number).columns
+    fig, axes = plt.subplots(nrows, ncols, constrained_layout=True, figsize=(12,8))
+    fig.suptitle('Churn occurrence')
     for i,col in enumerate(num_cols):
-        return
+        ax = sns.histplot(x=col, hue='Churn', data=df, kde=True, ax=axes[i//ncols][i%ncols])
+        ax.set_xlabel(f'{clean_str(col)}')
+    return fig
